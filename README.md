@@ -33,6 +33,7 @@ This application provides a single-window interface for CRUD operations on inven
 ---
 
 ## Folder Structure
+```
 inventory-manager/
 ├── src/
 │   └── com/
@@ -45,21 +46,18 @@ inventory-manager/
 │           ├── service/
 │           │   ├── FileService.java      # Text file read/write operations
 │           │   └── InventoryService.java # Business logic & data operations
-│           ├── task/
-│           │   └── AutoSaveTask.java     # Background save runnable
 │           ├── util/
 │           │   └── Validator.java        # Input validation utilities
 │           └── view/
 │               └── inventory.fxml        # JavaFX scene layout
 ├── data/
-│   └── inventory.txt                     # Persistent storage (auto-created)
+│   └── inventory.csv                     # Persistent storage (auto-created)
 ├── css/
 │   └── style.css                         # Optional JavaFX styling
 ├── lib/                                  # External dependencies (if any)
 ├── README.md
 └── build.gradle / pom.xml                # Build configuration
-plain
-Copy
+```
 
 
 ---
@@ -207,7 +205,7 @@ Lambdas replace anonymous inner classes throughout the codebase for conciseness 
 
 **Encoding:** UTF-8
 
-**Delimiter:** Pipe character `|`
+**Delimiter:** Pipe character `,`
 
 **Line Format:**
 
@@ -218,10 +216,10 @@ Copy
 
 **Example:**
 
-INV001|Wireless Optical Mouse|15|29.99
-INV002|USB-C to USB-A Cable|42|8.50
-INV003|Mechanical Keyboard Brown Switch|7|89.00
-INV004|27-inch IPS Monitor|3|249.99
+INV001,Wireless Optical Mouse,1529.99
+INV002,USB-C to USB-A Cable,428.50
+INV003,Mechanical Keyboard Brown Switch,789.00
+INV004,27-inch IPS Monitor,3249.99
 plain
 Copy
 
