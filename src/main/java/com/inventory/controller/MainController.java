@@ -2,6 +2,8 @@ package com.inventory.controller;
 
 import com.inventory.dao.InventoryDAO;
 import com.inventory.model.Item;
+import com.inventory.service.AutoSaveService;
+import com.inventory.util.Validator;
 import javafx.application.Platform;
 import javafx.collections.*;
 import javafx.collections.transformation.FilteredList;
@@ -15,9 +17,6 @@ import javafx.util.converter.IntegerStringConverter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainController {
@@ -36,7 +35,7 @@ public class MainController {
     private FilteredList<Item> filteredData;
     private InventoryDAO dao = new InventoryDAO();
     private AtomicBoolean dirty = new AtomicBoolean(false);
-    private ScheduledExecutorService autoSaveExecutor;
+    private AutoSaveService autoSaveService;
 
     @FXML
     public void initialize() {
@@ -44,8 +43,17 @@ public class MainController {
         setupEditableTable();
         setupSearchFilter();
         loadData();
-        startAutoSaveService();
-        updateStatus("Ready");
+
+        // Initialize auto-save service
+        autoSaveService = new AutoSaveService(dao,
+                this::updateStatus,
+                this::performAutoSave
+        );
+
+        // Start auto-save every 30 seconds
+        autoSaveService.start(30);
+
+        updateStatus("Ready - Auto-save every 30 seconds");
     }
 
     private void setupTableColumns() {
@@ -70,17 +78,6 @@ public class MainController {
                 }
             }
         }));
-
-        colTotal.setCellFactory(TextFieldTableCell.forTableColumn(new StringConverter<BigDecimal>() {
-            @Override
-            public String toString(BigDecimal object) {
-                return object != null ? String.format("%.2f", object) : "";
-            }
-            @Override
-            public BigDecimal fromString(String string) {
-                return BigDecimal.ZERO;
-            }
-        }));
     }
 
     private void setupEditableTable() {
@@ -88,14 +85,26 @@ public class MainController {
 
         colName.setCellFactory(TextFieldTableCell.forTableColumn());
         colName.setOnEditCommit(event -> {
-            event.getRowValue().setName(event.getNewValue());
-            markDirty();
+            String newName = event.getNewValue();
+            Optional<String> error = Validator.validateName(newName);
+            if (error.isPresent()) {
+                showAlert("Validation Error", error.get());
+                tableView.refresh();
+            } else {
+                event.getRowValue().setName(newName);
+                markDirty();
+            }
         });
 
         colQuantity.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colQuantity.setOnEditCommit(event -> {
-            if (event.getNewValue() >= 0) {
-                event.getRowValue().setQuantity(event.getNewValue());
+            int newQty = event.getNewValue();
+            Optional<String> error = Validator.validateQuantity(newQty);
+            if (error.isPresent()) {
+                showAlert("Validation Error", error.get());
+                tableView.refresh();
+            } else {
+                event.getRowValue().setQuantity(newQty);
                 markDirty();
                 refreshTable();
             }
@@ -116,8 +125,13 @@ public class MainController {
             }
         }));
         colPrice.setOnEditCommit(event -> {
-            if (event.getNewValue().compareTo(BigDecimal.ZERO) >= 0) {
-                event.getRowValue().setPrice(event.getNewValue());
+            BigDecimal newPrice = event.getNewValue();
+            Optional<String> error = Validator.validatePrice(newPrice);
+            if (error.isPresent()) {
+                showAlert("Validation Error", error.get());
+                tableView.refresh();
+            } else {
+                event.getRowValue().setPrice(newPrice);
                 markDirty();
                 refreshTable();
             }
@@ -145,41 +159,30 @@ public class MainController {
         updateStatus("Loaded " + masterData.size() + " items");
     }
 
-    private void startAutoSaveService() {
-        autoSaveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            return t;
-        });
-
-        autoSaveExecutor.scheduleAtFixedRate(() -> {
-            if (dirty.get()) {
-                boolean success = dao.saveAllItems(new ArrayList<>(masterData));
-                Platform.runLater(() -> {
-                    if (success) {
-                        dirty.set(false);
-                        updateStatus("Auto-saved at " + java.time.LocalTime.now().toString());
-                    } else {
-                        updateStatus("Auto-save failed!");
-                    }
-                });
+    private void performAutoSave() {
+        if (dirty.get()) {
+            boolean success = dao.saveAllItems(new ArrayList<>(masterData));
+            if (success) {
+                dirty.set(false);
             }
-        }, 30, 30, TimeUnit.SECONDS);
+        }
     }
 
     @FXML
     private void handleAddItem() {
         TextInputDialog idDialog = new TextInputDialog();
         idDialog.setTitle("Add Item");
-        idDialog.setHeaderText("Enter Item ID");
+        idDialog.setHeaderText("Enter Item ID (e.g., INV001)");
         idDialog.setContentText("ID:");
 
         Optional<String> idResult = idDialog.showAndWait();
         if (idResult.isPresent() && !idResult.get().trim().isEmpty()) {
             String id = idResult.get().trim();
 
-            if (dao.isIdExists(id, masterData)) {
-                showAlert("Error", "ID already exists: " + id);
+            // Validate ID using Validator
+            Optional<String> idError = Validator.validateId(id, masterData);
+            if (idError.isPresent()) {
+                showAlert("Validation Error", idError.get());
                 return;
             }
 
@@ -192,6 +195,13 @@ public class MainController {
             if (nameResult.isPresent() && !nameResult.get().trim().isEmpty()) {
                 String name = nameResult.get().trim();
 
+                // Validate Name
+                Optional<String> nameError = Validator.validateName(name);
+                if (nameError.isPresent()) {
+                    showAlert("Validation Error", nameError.get());
+                    return;
+                }
+
                 TextInputDialog qtyDialog = new TextInputDialog();
                 qtyDialog.setTitle("Add Item");
                 qtyDialog.setHeaderText("Enter Quantity");
@@ -201,7 +211,13 @@ public class MainController {
                 if (qtyResult.isPresent()) {
                     try {
                         int qty = Integer.parseInt(qtyResult.get().trim());
-                        if (qty < 0) throw new NumberFormatException();
+
+                        // Validate Quantity
+                        Optional<String> qtyError = Validator.validateQuantity(qty);
+                        if (qtyError.isPresent()) {
+                            showAlert("Validation Error", qtyError.get());
+                            return;
+                        }
 
                         TextInputDialog priceDialog = new TextInputDialog();
                         priceDialog.setTitle("Add Item");
@@ -210,17 +226,28 @@ public class MainController {
 
                         Optional<String> priceResult = priceDialog.showAndWait();
                         if (priceResult.isPresent()) {
-                            BigDecimal price = new BigDecimal(priceResult.get().trim());
-                            if (price.compareTo(BigDecimal.ZERO) >= 0) {
+                            try {
+                                BigDecimal price = new BigDecimal(priceResult.get().trim());
+
+                                // Validate Price
+                                Optional<String> priceError = Validator.validatePrice(price);
+                                if (priceError.isPresent()) {
+                                    showAlert("Validation Error", priceError.get());
+                                    return;
+                                }
+
                                 Item newItem = new Item(id, name, qty, price);
                                 masterData.add(newItem);
                                 markDirty();
                                 refreshTable();
                                 updateStatus("Added item: " + id);
+
+                            } catch (NumberFormatException e) {
+                                showAlert("Error", "Invalid price format");
                             }
                         }
                     } catch (NumberFormatException e) {
-                        showAlert("Error", "Invalid quantity or price");
+                        showAlert("Error", "Invalid quantity format");
                     }
                 }
             }
@@ -251,19 +278,26 @@ public class MainController {
 
     @FXML
     private void handleSaveNow() {
-        boolean success = dao.saveAllItems(new ArrayList<>(masterData));
-        if (success) {
-            dirty.set(false);
-            updateStatus("Saved manually at " + java.time.LocalTime.now().toString());
+        if (autoSaveService != null) {
+            boolean success = autoSaveService.saveNow(new ArrayList<>(masterData));
+            if (success) {
+                dirty.set(false);
+            }
         } else {
-            updateStatus("Save failed!");
-            showAlert("Error", "Failed to save data");
+            boolean success = dao.saveAllItems(new ArrayList<>(masterData));
+            if (success) {
+                dirty.set(false);
+                updateStatus("Saved manually at " + java.time.LocalTime.now().toString().substring(0, 8));
+            } else {
+                updateStatus("Save failed!");
+                showAlert("Error", "Failed to save data");
+            }
         }
     }
 
     private void markDirty() {
         dirty.set(true);
-        updateStatus("Unsaved changes");
+        updateStatus("✏️ Unsaved changes");
     }
 
     private void refreshTable() {
@@ -283,14 +317,10 @@ public class MainController {
     }
 
     public void shutdown() {
-        if (autoSaveExecutor != null) {
-            autoSaveExecutor.shutdown();
-            try {
-                autoSaveExecutor.awaitTermination(5, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        if (autoSaveService != null) {
+            autoSaveService.stop();
         }
+        // Final save before closing
         if (dirty.get()) {
             dao.saveAllItems(new ArrayList<>(masterData));
         }
