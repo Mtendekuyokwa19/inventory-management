@@ -13,9 +13,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/inventory/view/main-view.fxml"));
+        // Load login first; LoginController will switch to main-view.fxml on success
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/inventory/view/Login.fxml"));
         Parent root = loader.load();
-        controller = loader.getController();
 
         primaryStage.setTitle("Inventory Management System");
         primaryStage.setScene(new Scene(root, 1000, 600));

@@ -6,23 +6,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Validator class for validating inventory items before saving.
- * Prevents invalid data from corrupting the inventory file.
- */
 public class Validator {
 
-    /**
-     * Validate Item ID
-     * Rules:
-     * - Cannot be empty
-     * - Cannot contain pipe character (|) - breaks file format
-     * - Must be unique in the inventory
-     *
-     * @param id The ID to validate
-     * @param existingItems List of existing items to check uniqueness
-     * @return Optional empty if valid, or error message if invalid
-     */
     public static Optional<String> validateId(String id, List<Item> existingItems) {
         if (id == null || id.trim().isEmpty()) {
             return Optional.of(" ID cannot be empty");
@@ -43,15 +28,6 @@ public class Validator {
         return Optional.empty();
     }
 
-    /**
-     * Validate Item Name
-     * Rules:
-     * - Cannot be empty
-     * - Cannot contain pipe character (|) - breaks file format
-     *
-     * @param name The name to validate
-     * @return Optional empty if valid, or error message if invalid
-     */
     public static Optional<String> validateName(String name) {
         if (name == null || name.trim().isEmpty()) {
             return Optional.of(" Name cannot be empty");
@@ -64,15 +40,6 @@ public class Validator {
         return Optional.empty();
     }
 
-    /**
-     * Validate Item Quantity
-     * Rules:
-     * - Cannot be negative
-     * - Must be a valid integer
-     *
-     * @param quantity The quantity to validate
-     * @return Optional empty if valid, or error message if invalid
-     */
     public static Optional<String> validateQuantity(int quantity) {
         if (quantity < 0) {
             return Optional.of(" Quantity cannot be negative");
@@ -85,16 +52,6 @@ public class Validator {
         return Optional.empty();
     }
 
-    /**
-     * Validate Item Price
-     * Rules:
-     * - Cannot be null
-     * - Cannot be negative
-     * - Maximum reasonable price
-     *
-     * @param price The price to validate
-     * @return Optional empty if valid, or error message if invalid
-     */
     public static Optional<String> validatePrice(BigDecimal price) {
         if (price == null) {
             return Optional.of(" Price cannot be empty");
@@ -116,13 +73,7 @@ public class Validator {
         return Optional.empty();
     }
 
-    /**
-     * Validate full Item (all fields)
-     *
-     * @param item The item to validate
-     * @param existingItems Existing items for ID uniqueness check
-     * @return Optional empty if valid, or error message if invalid
-     */
+
     public static Optional<String> validateItem(Item item, List<Item> existingItems) {
         // Skip ID uniqueness check for existing item (editing)
         Optional<String> idError = validateId(item.getId(), null);
@@ -175,5 +126,19 @@ public class Validator {
             }
         }
         return String.format("INV%03d", maxNum + 1);
+    }
+
+
+    // LOGIN VALIDATION  (used by LoginController — does not affect inventory)
+
+    public static boolean isNotEmpty(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    public static boolean isValidEmail(String email) {
+        if (!isNotEmpty(email)) {
+            return false;
+        }
+        return email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
     }
 }
