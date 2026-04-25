@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.inventory.controller.LoginController"
+           styleClass="login-root"
+           stylesheets="@../../css/style.css">
+
+    <VBox alignment="CENTER" spacing="0" maxWidth="420" maxHeight="520"
+          styleClass="login-card">
+
+        <!-- ── HEADER ── -->
+        <VBox styleClass="login-header" alignment="CENTER">
+            <padding><Insets top="32" right="36" bottom="32" left="36"/></padding>
+            <Label text="Inventory Manager" styleClass="login-header-title"/>
+            <Label text="Sign in to your account" styleClass="login-header-sub"/>
+        </VBox>
+
+        <!-- ── FORM ── -->
+        <VBox styleClass="login-form" alignment="CENTER" spacing="14">
+            <padding><Insets top="36" right="40" bottom="36" left="40"/></padding>
+
+            <!-- Email -->
+            <VBox spacing="6">
+                <Label text="Email Address" styleClass="login-field-label"/>
+                <TextField fx:id="emailField"
+                           promptText="you@example.com"
+                           styleClass="login-field"/>
+            </VBox>
+
+            <!-- Password -->
+            <VBox spacing="6">
+                <Label text="Password" styleClass="login-field-label"/>
+                <PasswordField fx:id="passwordField"
+                               promptText="Enter your password"
+                               styleClass="login-field"/>
+            </VBox>
+
+            <!-- Error -->
+            <Label fx:id="errorLabel"
+                   styleClass="login-error"
+                   wrapText="true"
+                   maxWidth="340"/>
+
+            <!-- Spinner -->
+            <ProgressIndicator fx:id="loadingIndicator"
+                               styleClass="login-spinner"
+                               prefWidth="26"
+                               prefHeight="26"/>
+
+            <!-- Login Button -->
+            <Button fx:id="loginButton"
+                    text="Sign In"
+                    onAction="#handleLogin"
+                    styleClass="login-btn"
+                    defaultButton="true"
+                    maxWidth="10000"/>
+
+            <!-- Footer -->
+            <HBox alignment="CENTER" spacing="5">
+                <Label text="New user?" styleClass="login-footer-text"/>
+                <Hyperlink text="Create an account" styleClass="login-register-link"/>
+            </HBox>
+
+        </VBox>
+    </VBox>
+
+</StackPane>

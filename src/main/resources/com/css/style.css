@@ -1,0 +1,133 @@
+
+/*  Page background  */
+.login-root {
+    -fx-background-color: #ECEEF2;
+}
+
+/*  Card (the white panel)  */
+.login-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 20, 0, 0, 4);
+    -fx-min-width: 400px;
+    -fx-max-width: 420px;
+}
+
+/*  Header band inside the card */
+.login-header {
+    -fx-background-color: #3A5068;
+    -fx-background-radius: 10px 10px 0px 0px;
+}
+
+.login-header-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+}
+
+.login-header-sub {
+    -fx-text-fill: #B0BFCC;
+    -fx-font-size: 12px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-padding: 4 0 0 0;
+}
+
+/*  Form section  */
+.login-form {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 0px 0px 10px 10px;
+}
+
+/*  Field labels  */
+.login-field-label {
+    -fx-text-fill: #4A5568;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+/*  Input fields  */
+.login-field {
+    -fx-background-color: #F7F8FA;
+    -fx-background-radius: 6px;
+    -fx-border-color: #D1D9E0;
+    -fx-border-radius: 6px;
+    -fx-border-width: 1px;
+    -fx-padding: 10 14 10 14;
+    -fx-font-size: 13px;
+    -fx-text-fill: #2D3748;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-pref-height: 40px;
+    -fx-pref-width: 10000;
+}
+
+.login-field:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #3A5068;
+    -fx-border-width: 1.5px;
+    -fx-effect: dropshadow(gaussian, rgba(58,80,104,0.12), 6, 0, 0, 0);
+}
+
+/* Error label */
+.login-error {
+    -fx-text-fill: #C0392B;
+    -fx-font-size: 12px;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-min-height: 16px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/*  Spinner  */
+.login-spinner {
+    -fx-progress-color: #3A5068;
+}
+
+
+.login-btn {
+    -fx-background-color: #3A5068;
+    -fx-background-radius: 6px;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+    -fx-padding: 11 0 11 0;
+    -fx-cursor: hand;
+    -fx-pref-height: 42px;
+    -fx-pref-width: 10000;
+}
+
+.login-btn:hover {
+    -fx-background-color: #2E4057;
+}
+
+.login-btn:pressed {
+    -fx-background-color: #243347;
+    -fx-translate-y: 1px;
+}
+
+.login-btn:disabled {
+    -fx-background-color: #95A5B5;
+    -fx-cursor: default;
+}
+
+/* ── Footer ── */
+.login-footer-text {
+    -fx-text-fill: #718096;
+    -fx-font-size: 12px;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+.login-register-link {
+    -fx-text-fill: #3A5068;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.login-register-link:hover {
+    -fx-text-fill: #2E4057;
+}

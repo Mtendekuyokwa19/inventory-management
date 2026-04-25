@@ -1,0 +1,3 @@
+admin@email.com|admin123
+abdul@mubas.com|password123
+jane.smith@example.com|securePass!9
