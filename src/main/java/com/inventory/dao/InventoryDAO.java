@@ -74,10 +74,9 @@ public class InventoryDAO {
 
             // Then rename temp file to actual file (atomic operation)
             File actualFile = new File(FILE_PATH);
-            if (actualFile.exists()) {
-                Files.delete(actualFile.toPath());
-            }
-            Files.move(tempFile.toPath(), actualFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+            Files.move(tempFile.toPath(), actualFile.toPath(),
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
 
             return true;
         } catch (IOException e) {
