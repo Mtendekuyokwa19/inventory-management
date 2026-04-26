@@ -12,8 +12,8 @@
 
     <!-- Centralized properties -->
     <properties>
-        <java.version>21</java.version>
-        <javafx.version>21</javafx.version>
+        <java.version>17</java.version>
+        <javafx.version>17</javafx.version>
     </properties>
 
     <!-- Dependencies -->

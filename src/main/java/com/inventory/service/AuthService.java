@@ -3,8 +3,11 @@ package com.inventory.service;
 import com.inventory.model.User;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.File;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,5 +66,50 @@ public class AuthService {
             return Optional.empty();
         }
         return Optional.of(new User(storedEmail, storedPassword));
+    }
+
+    public boolean register(String email, String password) {
+        if (email == null || password == null
+                || email.isBlank() || password.isBlank()) {
+            return false;
+        }
+
+        String trimmedEmail = email.trim().toLowerCase();
+
+        if (emailExists(trimmedEmail)) {
+            return false;
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(USERS_FILE, true))) {
+            writer.write(trimmedEmail + "|" + password);
+            writer.newLine();
+            return true;
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING,
+                    "Could not write to users file: " + USERS_FILE, e);
+            return false;
+        }
+    }
+
+    public boolean emailExists(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Optional<User> candidate = parseLine(line);
+                if (candidate.isPresent() && candidate.get().getEmail()
+                        .equalsIgnoreCase(email.trim())) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING,
+                    "Could not read users file: " + USERS_FILE, e);
+        }
+
+        return false;
     }
 }

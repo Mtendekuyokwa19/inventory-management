@@ -35,6 +35,7 @@ public class LoginController {
     @FXML private TextField         emailField;
     @FXML private PasswordField     passwordField;
     @FXML private Button            loginButton;
+    @FXML private Hyperlink        registerLink;
     @FXML private Label             errorLabel;
     @FXML private ProgressIndicator loadingIndicator;
 
@@ -154,6 +155,30 @@ public class LoginController {
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Failed to load main-view.fxml", e);
                 showError("Failed to open the application. Please restart.");
+            }
+        });
+    }
+
+    @FXML
+    public void handleRegisterLink() {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(
+                        getClass().getResource("/com/inventory/view/Registration.fxml"));
+                Parent root = loader.load();
+
+                Stage stage = (Stage) registerLink.getScene().getWindow();
+
+                Scene scene = new Scene(root, 420, 520);
+                stage.setScene(scene);
+                stage.setTitle("Inventory Manager - Create Account");
+                stage.setMinWidth(380);
+                stage.setMinHeight(450);
+                stage.show();
+
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Failed to load Registration.fxml", e);
+                showError("Failed to open registration. Please try again.");
             }
         });
     }
