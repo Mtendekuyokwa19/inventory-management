@@ -13,6 +13,7 @@
     <HBox spacing="10">
         <Button text="➕ Add Item" onAction="#handleAddItem"/>
         <Button text="🗑 Delete Item" onAction="#handleDeleteItem"/>
+        <Button text=" Undo Delete" onAction="#handleUndoDelete"/>
         <Button text="💾 Save Now" fx:id="saveButton" onAction="#handleSaveNow"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label text="Search:" alignment="CENTER_RIGHT"/>

@@ -36,6 +36,7 @@ public class MainController {
     private InventoryDAO dao = new InventoryDAO();
     private AtomicBoolean dirty = new AtomicBoolean(false);
     private AutoSaveService autoSaveService;
+    private Item lastDeletedItem; // NEW - stores last deleted item for undo
 
     @FXML
     public void initialize() {
@@ -170,88 +171,76 @@ public class MainController {
 
     @FXML
     private void handleAddItem() {
-        TextInputDialog idDialog = new TextInputDialog();
-        idDialog.setTitle("Add Item");
-        idDialog.setHeaderText("Enter Item ID (e.g., INV001)");
-        idDialog.setContentText("ID:");
+        String id = Validator.generateUniqueId(new ArrayList<>(masterData));
 
-        Optional<String> idResult = idDialog.showAndWait();
-        if (idResult.isPresent() && !idResult.get().trim().isEmpty()) {
-            String id = idResult.get().trim();
+        TextInputDialog nameDialog = new TextInputDialog();
+        nameDialog.setTitle("Add Item");
+        nameDialog.setHeaderText("Auto-generated ID: " + id);
+        nameDialog.setContentText("Name:");
 
-            // Validate ID using Validator
-            Optional<String> idError = Validator.validateId(id, masterData);
-            if (idError.isPresent()) {
-                showAlert("Validation Error", idError.get());
-                return;
-            }
-
-            TextInputDialog nameDialog = new TextInputDialog();
-            nameDialog.setTitle("Add Item");
-            nameDialog.setHeaderText("Enter Item Name");
-            nameDialog.setContentText("Name:");
-
-            Optional<String> nameResult = nameDialog.showAndWait();
-            if (nameResult.isPresent() && !nameResult.get().trim().isEmpty()) {
-                String name = nameResult.get().trim();
-
-                // Validate Name
-                Optional<String> nameError = Validator.validateName(name);
-                if (nameError.isPresent()) {
-                    showAlert("Validation Error", nameError.get());
-                    return;
-                }
-
-                TextInputDialog qtyDialog = new TextInputDialog();
-                qtyDialog.setTitle("Add Item");
-                qtyDialog.setHeaderText("Enter Quantity");
-                qtyDialog.setContentText("Quantity:");
-
-                Optional<String> qtyResult = qtyDialog.showAndWait();
-                if (qtyResult.isPresent()) {
-                    try {
-                        int qty = Integer.parseInt(qtyResult.get().trim());
-
-                        // Validate Quantity
-                        Optional<String> qtyError = Validator.validateQuantity(qty);
-                        if (qtyError.isPresent()) {
-                            showAlert("Validation Error", qtyError.get());
-                            return;
-                        }
-
-                        TextInputDialog priceDialog = new TextInputDialog();
-                        priceDialog.setTitle("Add Item");
-                        priceDialog.setHeaderText("Enter Price");
-                        priceDialog.setContentText("Price:");
-
-                        Optional<String> priceResult = priceDialog.showAndWait();
-                        if (priceResult.isPresent()) {
-                            try {
-                                BigDecimal price = new BigDecimal(priceResult.get().trim());
-
-                                // Validate Price
-                                Optional<String> priceError = Validator.validatePrice(price);
-                                if (priceError.isPresent()) {
-                                    showAlert("Validation Error", priceError.get());
-                                    return;
-                                }
-
-                                Item newItem = new Item(id, name, qty, price);
-                                masterData.add(newItem);
-                                markDirty();
-                                refreshTable();
-                                updateStatus("Added item: " + id);
-
-                            } catch (NumberFormatException e) {
-                                showAlert("Error", "Invalid price format");
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        showAlert("Error", "Invalid quantity format");
-                    }
-                }
-            }
+        Optional<String> nameResult = nameDialog.showAndWait();
+        if (!nameResult.isPresent() || nameResult.get().trim().isEmpty()) {
+            return;
         }
+        String name = nameResult.get().trim();
+
+        Optional<String> nameError = Validator.validateName(name);
+        if (nameError.isPresent()) {
+            showAlert("Validation Error", nameError.get());
+            return;
+        }
+
+        TextInputDialog qtyDialog = new TextInputDialog();
+        qtyDialog.setTitle("Add Item");
+        qtyDialog.setHeaderText("Item: " + name);
+        qtyDialog.setContentText("Quantity:");
+
+        Optional<String> qtyResult = qtyDialog.showAndWait();
+        if (!qtyResult.isPresent()) {
+            return;
+        }
+        int qty;
+        try {
+            qty = Integer.parseInt(qtyResult.get().trim());
+        } catch (NumberFormatException e) {
+            showAlert("Error", "Invalid quantity format");
+            return;
+        }
+
+        Optional<String> qtyError = Validator.validateQuantity(qty);
+        if (qtyError.isPresent()) {
+            showAlert("Validation Error", qtyError.get());
+            return;
+        }
+
+        TextInputDialog priceDialog = new TextInputDialog();
+        priceDialog.setTitle("Add Item");
+        priceDialog.setHeaderText("Item: " + name + " | Qty: " + qty);
+        priceDialog.setContentText("Price:");
+
+        Optional<String> priceResult = priceDialog.showAndWait();
+        if (!priceResult.isPresent()) {
+            return;
+        }
+        BigDecimal price;
+        try {
+            price = new BigDecimal(priceResult.get().trim());
+        } catch (NumberFormatException e) {
+            showAlert("Error", "Invalid price format");
+            return;
+        }
+
+        Optional<String> priceError = Validator.validatePrice(price);
+        if (priceError.isPresent()) {
+            showAlert("Validation Error", priceError.get());
+            return;
+        }
+
+        Item newItem = new Item(id, name, qty, price);
+        masterData.add(newItem);
+        markDirty();
+        refreshTable();
+        updateStatus("Added item: " + id);
     }
 
     @FXML
@@ -269,11 +258,26 @@ public class MainController {
 
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
+            lastDeletedItem = selected; // NEW - save before removing
             masterData.remove(selected);
             markDirty();
             refreshTable();
-            updateStatus("Deleted item: " + selected.getId());
+            updateStatus("Deleted item: " + selected.getId() + " (click Undo to restore)");
         }
+    }
+
+    @FXML
+    private void handleUndoDelete() { // NEW METHOD
+        if (lastDeletedItem == null) {
+            showAlert("Nothing to Undo", "No recently deleted item to restore.");
+            return;
+        }
+        String restoredId = lastDeletedItem.getId();
+        masterData.add(lastDeletedItem);
+        lastDeletedItem = null;
+        markDirty();
+        refreshTable();
+        updateStatus("Restored item: " + restoredId);
     }
 
     @FXML
