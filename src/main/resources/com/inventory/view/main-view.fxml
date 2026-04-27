@@ -4,24 +4,21 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.inventory.controller.MainController">
-    <padding>
-        <Insets bottom="10" left="10" right="10" top="10"/>
-    </padding>
+<VBox spacing="0" styleClass="main-root" stylesheets="@../../css/style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.inventory.controller.MainController">
 
     <!-- Toolbar -->
-    <HBox spacing="10">
-        <Button text="➕ Add Item" onAction="#handleAddItem"/>
-        <Button text="🗑 Delete Item" onAction="#handleDeleteItem"/>
-        <Button text=" Undo Delete" onAction="#handleUndoDelete"/>
-        <Button text="💾 Save Now" fx:id="saveButton" onAction="#handleSaveNow"/>
+    <HBox spacing="10" styleClass="main-toolbar" alignment="CENTER_LEFT">
+        <Button text="➕ Add Item" styleClass="toolbar-btn-accent" onAction="#handleAddItem"/>
+        <Button text="🗑 Delete Item" styleClass="toolbar-btn" onAction="#handleDeleteItem"/>
+        <Button text="Undo Delete" styleClass="toolbar-btn" onAction="#handleUndoDelete"/>
+        <Button text="💾 Save Now" fx:id="saveButton" styleClass="toolbar-btn" onAction="#handleSaveNow"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label text="Search:" alignment="CENTER_RIGHT"/>
-        <TextField fx:id="searchField" promptText="Type to filter..." prefWidth="200"/>
+        <Label text="Search:" styleClass="main-search-label" alignment="CENTER_RIGHT"/>
+        <TextField fx:id="searchField" styleClass="main-search" promptText="Type to filter..." prefWidth="200"/>
     </HBox>
 
     <!-- TableView -->
-    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+    <TableView fx:id="tableView" styleClass="main-table" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colId" text="ID" prefWidth="100"/>
             <TableColumn fx:id="colName" text="Name" prefWidth="200"/>
@@ -35,9 +32,9 @@
     </TableView>
 
     <!-- Status Bar -->
-    <Label fx:id="statusLabel" style="-fx-text-fill: #666666; -fx-font-size: 11px;">
+    <Label fx:id="statusLabel" styleClass="main-status">
         <padding>
-            <Insets top="5"/>
+            <Insets top="6" left="14" bottom="6"/>
         </padding>
     </Label>
 </VBox>
