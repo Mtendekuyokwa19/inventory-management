@@ -16,8 +16,12 @@ import javafx.util.converter.IntegerStringConverter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class MainController {
 
@@ -36,7 +40,9 @@ public class MainController {
     private InventoryDAO dao = new InventoryDAO();
     private AtomicBoolean dirty = new AtomicBoolean(false);
     private AutoSaveService autoSaveService;
-    private Item lastDeletedItem; // NEW - stores last deleted item for undo
+    private Item lastDeletedItem;
+    private final ExecutorService searchExecutor = Executors.newSingleThreadExecutor();
+    private volatile String pendingSearch = null;
 
     @FXML
     public void initialize() {
@@ -144,11 +150,26 @@ public class MainController {
         tableView.setItems(filteredData);
 
         searchField.textProperty().addListener((obs, old, newValue) -> {
-            filteredData.setPredicate(item -> {
-                if (newValue == null || newValue.isEmpty()) return true;
-                String lowerFilter = newValue.toLowerCase();
-                return item.getId().toLowerCase().contains(lowerFilter) ||
-                        item.getName().toLowerCase().contains(lowerFilter);
+            String filterText = newValue;
+            pendingSearch = filterText;
+
+            searchExecutor.submit(() -> {
+                String searchTerm = pendingSearch;
+                List<Item> filtered = masterData.stream()
+                        .filter(item -> {
+                            if (searchTerm == null || searchTerm.isEmpty()) return true;
+                            String lowerFilter = searchTerm.toLowerCase();
+                            return item.getId().toLowerCase().contains(lowerFilter) ||
+                                    item.getName().toLowerCase().contains(lowerFilter);
+                        })
+                        .collect(Collectors.toList());
+
+                if (searchTerm == pendingSearch) {
+                    Platform.runLater(() -> {
+                        filteredData.setPredicate(item -> filtered.contains(item));
+                        updateStatus("Found " + filtered.size() + " items");
+                    });
+                }
             });
         });
     }
@@ -324,7 +345,7 @@ public class MainController {
         if (autoSaveService != null) {
             autoSaveService.stop();
         }
-        // Final save before closing
+        searchExecutor.shutdown();
         if (dirty.get()) {
             dao.saveAllItems(new ArrayList<>(masterData));
         }
